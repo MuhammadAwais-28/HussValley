@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "678250853870",
+    "project_id": "huss-valley",
+    "storage_bucket": "huss-valley.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:678250853870:android:ddcb40aa86edf3f2aecaff",
+        "android_client_info": {
+          "package_name": "com.huss.valley.obby.parkour.run.survival.games"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCF6QOmSFuXTZWmVSO5j9568WYLLvKkkGo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
