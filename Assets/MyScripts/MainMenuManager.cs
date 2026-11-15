@@ -9,24 +9,24 @@ public class MainMenuManager : MonoBehaviour
     public GameObject playScreenPanel;
     public GameObject playerProfilePanel;
     public GameObject flagSelectionPanel;
-    public GameObject modeSelectionPanel;
-    public GameObject levelSelectionPanel;
+    public GameObject characterSelectionPanel;
+    public GameObject truckSelectionPanel;
 
-    [Header("Buttons")]
+    [Header("Main Menu Buttons")]
     public Button playButton;
     public Button exitButton;
     public Button privacyPolicyButton;
 
+    [Header("Player Profile Buttons")]
     public Button playerProfileSaveButton;
     public Button playerProfileBackButton;
 
+    [Header("Flag Selection Buttons")]
     public Button flagSaveButton;
     public Button flagBackButton;
 
-    public Button modeSelectConfirmButton;
-
     [Header("Privacy Policy Settings")]
-    public string privacyPolicyUrl = "https://yourprivacyurl.com";
+    public string privacyPolicyUrl = "https://samtechnologiesgamingstudio.blogspot.com/p/privacy-policy.html";
 
     [Header("Player Profile Settings")]
     public TMP_InputField writeYourName;
@@ -34,26 +34,52 @@ public class MainMenuManager : MonoBehaviour
     [Header("Flag Selection Settings")]
     public Button[] flagButtons;
     public GameObject[] highlightBorders;
+
     private int selectedFlagIndex = -1;
 
-    void Start()
+    [Header("Character Selection")]
+    public Button[] characterSelectButtons;
+
+    private int selectedCharacterIndex = -1;
+
+    [Header("Truck Selection")]
+    public Button[] truckSelectButtons;
+
+    private int selectedTruckIndex = -1;
+
+    [Header("Scene Settings")]
+    public string gameSceneName = "GameScene";
+
+    private void Start()
     {
+        // Show first panel
         ShowPanel(playScreenPanel);
 
-        // Hook up buttons
-        if (playButton != null) playButton.onClick.AddListener(OnPlayPressed);
-        if (exitButton != null) exitButton.onClick.AddListener(OnExitPressed);
-        if (privacyPolicyButton != null) privacyPolicyButton.onClick.AddListener(OnPrivacyPolicyPressed);
+        // Main Menu Buttons
+        if (playButton != null)
+            playButton.onClick.AddListener(OnPlayPressed);
 
-        if (playerProfileSaveButton != null) playerProfileSaveButton.onClick.AddListener(OnPlayerProfileSavePressed);
-        if (playerProfileBackButton != null) playerProfileBackButton.onClick.AddListener(OnPlayerProfileBackPressed);
+        if (exitButton != null)
+            exitButton.onClick.AddListener(OnExitPressed);
 
-        if (flagSaveButton != null) flagSaveButton.onClick.AddListener(OnFlagSavePressed);
-        if (flagBackButton != null) flagBackButton.onClick.AddListener(OnFlagBackPressed);
+        if (privacyPolicyButton != null)
+            privacyPolicyButton.onClick.AddListener(OnPrivacyPolicyPressed);
 
-        if (modeSelectConfirmButton != null) modeSelectConfirmButton.onClick.AddListener(OnModeSelectConfirmPressed);
+        // Profile Buttons
+        if (playerProfileSaveButton != null)
+            playerProfileSaveButton.onClick.AddListener(OnPlayerProfileSavePressed);
 
-        // Flag button listeners
+        if (playerProfileBackButton != null)
+            playerProfileBackButton.onClick.AddListener(OnPlayerProfileBackPressed);
+
+        // Flag Buttons
+        if (flagSaveButton != null)
+            flagSaveButton.onClick.AddListener(OnFlagSavePressed);
+
+        if (flagBackButton != null)
+            flagBackButton.onClick.AddListener(OnFlagBackPressed);
+
+        // Flag Selection Listeners
         if (flagButtons != null)
         {
             for (int i = 0; i < flagButtons.Length; i++)
@@ -63,17 +89,41 @@ public class MainMenuManager : MonoBehaviour
             }
         }
 
-        // Hide all flag borders initially
+        // Character Selection Listeners
+        if (characterSelectButtons != null)
+        {
+            for (int i = 0; i < characterSelectButtons.Length; i++)
+            {
+                int index = i;
+                characterSelectButtons[i].onClick.AddListener(() => OnCharacterSelected(index));
+            }
+        }
+
+        // Truck Selection Listeners
+        if (truckSelectButtons != null)
+        {
+            for (int i = 0; i < truckSelectButtons.Length; i++)
+            {
+                int index = i;
+                truckSelectButtons[i].onClick.AddListener(() => OnTruckSelected(index));
+            }
+        }
+
+        // Hide all flag highlights initially
         if (highlightBorders != null)
         {
-            foreach (var border in highlightBorders)
+            foreach (GameObject border in highlightBorders)
             {
-                border.SetActive(false);
+                if (border != null)
+                    border.SetActive(false);
             }
         }
     }
 
-    // --- PLAY SCREEN ---
+    // ======================================================
+    // PLAY SCREEN
+    // ======================================================
+
     public void OnPlayPressed()
     {
         ShowPanel(playerProfilePanel);
@@ -92,9 +142,23 @@ public class MainMenuManager : MonoBehaviour
         }
     }
 
-    // --- PLAYER PROFILE SCREEN ---
+    // ======================================================
+    // PLAYER PROFILE SCREEN
+    // ======================================================
+
     public void OnPlayerProfileSavePressed()
     {
+        string playerName = writeYourName.text.Trim();
+
+        if (string.IsNullOrEmpty(playerName))
+        {
+            Debug.Log("Please enter your name.");
+            return;
+        }
+
+        PlayerPrefs.SetString("PlayerName", playerName);
+        PlayerPrefs.Save();
+
         ShowPanel(flagSelectionPanel);
     }
 
@@ -103,18 +167,43 @@ public class MainMenuManager : MonoBehaviour
         ShowPanel(playScreenPanel);
     }
 
-    // --- FLAG SELECTION SCREEN ---
+    // ======================================================
+    // FLAG SELECTION SCREEN
+    // ======================================================
+
+    private void OnFlagClicked(int index)
+    {
+        if (highlightBorders != null)
+        {
+            for (int i = 0; i < highlightBorders.Length; i++)
+            {
+                if (highlightBorders[i] != null)
+                    highlightBorders[i].SetActive(false);
+            }
+
+            if (index < highlightBorders.Length)
+            {
+                highlightBorders[index].SetActive(true);
+            }
+        }
+
+        selectedFlagIndex = index;
+
+        Debug.Log("Selected Flag Index: " + index);
+    }
+
     public void OnFlagSavePressed()
     {
-        // Only allow save if a flag is selected
-        if (selectedFlagIndex >= 0)
-        {
-            ShowPanel(modeSelectionPanel);
-        }
-        else
+        if (selectedFlagIndex < 0)
         {
             Debug.Log("Please select a flag before continuing.");
+            return;
         }
+
+        PlayerPrefs.SetInt("SelectedFlag", selectedFlagIndex);
+        PlayerPrefs.Save();
+
+        ShowPanel(characterSelectionPanel);
     }
 
     public void OnFlagBackPressed()
@@ -122,44 +211,79 @@ public class MainMenuManager : MonoBehaviour
         ShowPanel(playerProfilePanel);
     }
 
-    private void OnFlagClicked(int index)
+    // ======================================================
+    // CHARACTER SELECTION SCREEN
+    // ======================================================
+
+    private void OnCharacterSelected(int index)
     {
-        for (int i = 0; i < highlightBorders.Length; i++)
-        {
-            highlightBorders[i].SetActive(false);
-        }
+        selectedCharacterIndex = index;
 
-        highlightBorders[index].SetActive(true);
-        selectedFlagIndex = index;
+        PlayerPrefs.SetInt("SelectedCharacter", index);
+        PlayerPrefs.Save();
 
+        Debug.Log("Selected Character: " + index);
 
-        Debug.Log($"Clicked flag index: {index}, Activated border index: {index}");
+        ShowPanel(truckSelectionPanel);
     }
 
-    // --- MODE SELECTION SCREEN ---
-    public void OnModeSelectConfirmPressed()
+    // Optional: Use this directly from Inspector buttons
+    public void SelectCharacter(int index)
     {
-        ShowPanel(levelSelectionPanel);
+        OnCharacterSelected(index);
     }
 
-    // --- LEVEL SELECTION SCREEN ---
-    public void LoadGameplayScene(string sceneName)
+    // ======================================================
+    // TRUCK SELECTION SCREEN
+    // ======================================================
+
+    private void OnTruckSelected(int index)
     {
-        SceneManager.LoadScene(sceneName);
+        selectedTruckIndex = index;
+
+        PlayerPrefs.SetInt("SelectedTruck", index);
+        PlayerPrefs.Save();
+
+        Debug.Log("Selected Truck: " + index);
+
+        SceneManager.LoadScene(gameSceneName);
     }
 
-    // --- HELPER ---
+    // Optional: Use this directly from Inspector buttons
+    public void SelectTruck(int index)
+    {
+        OnTruckSelected(index);
+    }
+
+    // ======================================================
+    // PANEL MANAGEMENT
+    // ======================================================
+
     private void ShowPanel(GameObject panelToActivate)
     {
-        if (playScreenPanel != null) playScreenPanel.SetActive(false);
-        if (playerProfilePanel != null) playerProfilePanel.SetActive(false);
-        if (flagSelectionPanel != null) flagSelectionPanel.SetActive(false);
-        if (modeSelectionPanel != null) modeSelectionPanel.SetActive(false);
-        if (levelSelectionPanel != null) levelSelectionPanel.SetActive(false);
+        if (playScreenPanel != null)
+            playScreenPanel.SetActive(false);
+
+        if (playerProfilePanel != null)
+            playerProfilePanel.SetActive(false);
+
+        if (flagSelectionPanel != null)
+            flagSelectionPanel.SetActive(false);
+
+        if (characterSelectionPanel != null)
+            characterSelectionPanel.SetActive(false);
+
+        if (truckSelectionPanel != null)
+            truckSelectionPanel.SetActive(false);
 
         if (panelToActivate != null)
-        {
             panelToActivate.SetActive(true);
-        }
+    }
+
+
+    public void GoToHomeScene()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("HomeScene");
     }
 }

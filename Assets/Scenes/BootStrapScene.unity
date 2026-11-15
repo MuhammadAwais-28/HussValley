@@ -172,17 +172,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5216b1d651122d4eab046cb0158d0ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AdsManager
-  BlockAllAds: 0
-  BlockBannerAd: 0
-  BlockInterstitialAd: 0
-  BlockRewardedAd: 0
-  BlockAppOpenAd: 0
-  BlockNativeAd: 0
-  BlockRewardedInterstitialAd: 0
-  BlockMRecAd: 0
+  BlockAllAds: 1
+  BlockBannerAd: 1
+  BlockInterstitialAd: 1
+  BlockRewardedAd: 1
+  BlockAppOpenAd: 1
+  BlockNativeAd: 1
+  BlockRewardedInterstitialAd: 1
+  BlockMRecAd: 1
   BannerHandler: {fileID: 463923156}
   InterstitialHandler: {fileID: 1903135673}
-  RewardedHandler: {fileID: 0}
+  RewardedHandler: {fileID: 1924150160}
   AppOpenHandler: {fileID: 1941195352}
   NativeHandler: {fileID: 1417122237}
   MRecHandler: {fileID: 0}
@@ -713,7 +713,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 700a03ff9255b0044ae667f5c65c120c, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 7263fc14a0716c74c9efec7b389c1ca8, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1022,7 +1022,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb898ca2123eeaa458def37fa4436408, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MusicManager
-  backgroundMusic: {fileID: 8300000, guid: 6d3fcb98786533943b5dd10eabe7b1c5, type: 3}
+  backgroundMusic: {fileID: 8300000, guid: 1869c6b351ef2504ebc60e6438127446, type: 3}
   volume: 0.5
 --- !u!4 &785375419
 Transform:
@@ -1183,6 +1183,9 @@ MonoBehaviour:
   customYPercent: 0.5
   widthPercent: 0.6
   heightPercent: 0.15
+  customBaseWidth: 300
+  customBaseHeight: 340
+  minHeightForMedium: 300
 --- !u!1 &1483425370
 GameObject:
   m_ObjectHideFlags: 0
@@ -1258,6 +1261,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78f38eb1419e86a45bae797ece9f28d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RemoteAdsConfig
+  maxFetchRetries: 5
+  retryDelaySeconds: 5
+  perStepTimeoutSeconds: 12
+  readyTimeoutSeconds: 15
 --- !u!1 &1903135671
 GameObject:
   m_ObjectHideFlags: 0
@@ -1312,6 +1319,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1924150158}
   - component: {fileID: 1924150159}
+  - component: {fileID: 1924150160}
   m_Layer: 0
   m_Name: RewardedAdd
   m_TagString: Untagged
@@ -1341,11 +1349,23 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1924150157}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0311c70052f195e4c90579f93d0aed0a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RewardedInterstitialAdHandler
+--- !u!114 &1924150160
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1924150157}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6868394705a5a3842a38bbfae91aab0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RewardedAdHandler
 --- !u!1 &1941195350
 GameObject:
   m_ObjectHideFlags: 0

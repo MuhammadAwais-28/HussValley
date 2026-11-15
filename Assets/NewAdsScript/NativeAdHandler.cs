@@ -2,12 +2,10 @@ using GoogleMobileAds.Api;
 using UnityEngine;
 
 /// <summary>
-/// Keeps two ad slots: the one currently on screen (_currentAd), and one
-/// quietly pre-fetching in the background (_pendingAd) so the NEXT screen
-/// transition doesn't have to wait on a network request. Positioning/sizing
-/// is applied at render time (fast, no network), so as long as the pending
-/// ad had time to finish loading while the player was on the previous
-/// screen, the next screen shows it immediately.
+/// Two ad slots: the one on screen (_currentAd) and one pre-fetching in the
+/// background (_pendingAd). Position math is the original (unchanged);
+/// only the custom-position height was increased so the Medium template's
+/// media view is never squeezed below AdMob's minimum (validator error).
 /// </summary>
 public class NativeAdHandler : MonoBehaviour
 {
@@ -15,35 +13,29 @@ public class NativeAdHandler : MonoBehaviour
     public AdPosition Position = AdPosition.Top;
 
     [Header("Custom Position (overrides Position above when enabled)")]
-    [Tooltip("If true, places the ad at an exact pixel spot instead of one of the fixed corners/edges above.")]
     public bool useCustomPosition = false;
-
-    [Tooltip("Horizontal position as a fraction of screen width. 0 = left edge, 1 = right edge.")]
     [Range(0f, 1f)] public float customXPercent = 0f;
-
-    [Tooltip("Vertical position as a fraction of screen height. 0 = top edge, 1 = bottom edge.")]
     [Range(0f, 1f)] public float customYPercent = 0.5f;
 
-    [Header("Size (prevents the template from stretching full-screen)")]
-    [Tooltip("Width as a fraction of screen width.")]
+    [Header("Size (non-custom mode)")]
     [Range(0.1f, 1f)] public float widthPercent = 0.6f;
-
-    [Tooltip("Height as a fraction of screen height.")]
     [Range(0.05f, 1f)] public float heightPercent = 0.15f;
+
+    [Header("Custom mode size (base units, multiplied by device scale)")]
+    public float customBaseWidth = 300f;
+    [Tooltip("Was 250. Taller = media view never gets squeezed. Raise if validator still complains.")]
+    public float customBaseHeight = 340f;
+
+    [Tooltip("If the screen can't fit the Medium template at this height, the Small template (no media view) is used instead.")]
+    public float minHeightForMedium = 300f;
 
     private NativeOverlayAd _currentAd;
     private NativeOverlayAd _pendingAd;
     private int _currentRequestId;
     private int _pendingRequestId;
 
-    /// <summary>True once a background-preloaded ad is ready to swap in instantly.</summary>
     public bool HasPendingAd => _pendingAd != null;
 
-    /// <summary>
-    /// Old behavior: loads directly into the CURRENT slot and renders as
-    /// soon as it arrives (there will be a visible wait). Used as a fallback
-    /// when no pending ad is ready yet, and for the very first load.
-    /// </summary>
     public void LoadAd()
     {
         Debug.Log("[NativeAdHandler] LoadAd() called (direct, will wait for network).");
@@ -56,7 +48,6 @@ public class NativeAdHandler : MonoBehaviour
         }
 
         int thisRequestId = ++_currentRequestId;
-
         AdRequest request = new AdRequest();
         NativeAdOptions options = new NativeAdOptions();
 
@@ -89,24 +80,16 @@ public class NativeAdHandler : MonoBehaviour
             RenderAd(_currentAd);
             Debug.Log("[NativeAdHandler] Ad loaded and rendered (direct load).");
 
-            // Now that something is showing, start warming up the NEXT one
-            // in the background for whatever screen comes after this one.
             PreloadNext();
         });
     }
 
-    /// <summary>
-    /// Quietly fetches a fresh ad in the background without rendering it —
-    /// call this once the current screen's ad is already showing, so the
-    /// next screen has something ready to swap in instantly.
-    /// </summary>
     public void PreloadNext()
     {
-        if (_pendingAd != null) return; // already have one waiting
+        if (_pendingAd != null) return;
         if (AdsManager.Instance != null && AdsManager.Instance.BlockNativeAd) return;
 
         int thisRequestId = ++_pendingRequestId;
-
         AdRequest request = new AdRequest();
         NativeAdOptions options = new NativeAdOptions();
 
@@ -140,13 +123,6 @@ public class NativeAdHandler : MonoBehaviour
         });
     }
 
-    /// <summary>
-    /// Called by NativeAdScreenBinding when a screen becomes active. If a
-    /// preloaded ad is ready, swaps it in and renders instantly (no wait),
-    /// then immediately starts preloading the NEXT one. If nothing was
-    /// preloaded yet (e.g. very first screen), falls back to a direct
-    /// LoadAd(), which will have a visible wait like before.
-    /// </summary>
     public void ShowFresh()
     {
         Debug.Log($"[NativeAdHandler] ShowFresh() called. hasPending={_pendingAd != null}, useCustomPosition={useCustomPosition}, X%={customXPercent}, Y%={customYPercent}");
@@ -158,7 +134,6 @@ public class NativeAdHandler : MonoBehaviour
             _pendingAd = null;
             RenderAd(_currentAd);
             Debug.Log("[NativeAdHandler] Swapped in preloaded ad instantly.");
-
             PreloadNext();
         }
         else
@@ -168,81 +143,81 @@ public class NativeAdHandler : MonoBehaviour
         }
     }
 
-    /// <summary>Kept for any old callers still using Show() directly (e.g. manual test wiring).</summary>
     public void Show()
     {
-        Debug.Log($"[NativeAdHandler] Show() called. hasExistingAd={_currentAd != null}, useCustomPosition={useCustomPosition}, Position={Position}, X%={customXPercent}, Y%={customYPercent}");
-
+        Debug.Log($"[NativeAdHandler] Show() called. hasExistingAd={_currentAd != null}");
         if (_currentAd == null)
         {
             ShowFresh();
             return;
         }
-
         RenderAd(_currentAd);
     }
 
     private void RenderAd(NativeOverlayAd ad)
     {
-        NativeTemplateStyle style = new NativeTemplateStyle
-        {
-            TemplateId = NativeTemplateId.Medium,
-            MainBackgroundColor = Color.white
-        };
-
-        int width;
-        int height;
-        AdSize size;
-
-        // Calculate device scaling factor safely (DP to Pixels)
+        // Same scale factor as the original script
         float scaleFactor = Screen.dpi / 160f;
         if (scaleFactor <= 0f || float.IsNaN(scaleFactor)) scaleFactor = 1.0f;
-        if (scaleFactor > 3.0f) scaleFactor = 2.0f; // Limit extreme simulated high-res scaling in editor
+        if (scaleFactor > 3.0f) scaleFactor = 2.0f;
 
         if (useCustomPosition)
         {
-            // Force the exact standard 300x250 Medium Rectangle size in pixels
-            width = Mathf.RoundToInt(300 * scaleFactor);
-            height = Mathf.RoundToInt(250 * scaleFactor);
-
-            // Absolute hardcoded safe-minimums required by Google AdMob native layout engine
+            int width = Mathf.RoundToInt(customBaseWidth * scaleFactor);
+            int height = Mathf.RoundToInt(customBaseHeight * scaleFactor);
             if (width < 300) width = 300;
             if (height < 250) height = 250;
 
-            size = new AdSize(width, height);
+            // Original clamp limits (position math unchanged)
+            int maxHeight = Screen.height - 20;
+            bool useMedium = maxHeight >= minHeightForMedium * scaleFactor;
+            if (height > maxHeight) height = maxHeight;
 
-            // Locate the target point using your screen coordinates
+            NativeTemplateStyle style = new NativeTemplateStyle
+            {
+                TemplateId = useMedium ? NativeTemplateId.Medium : NativeTemplateId.Small,
+                MainBackgroundColor = Color.white
+            };
+
+            if (!useMedium)
+                height = Mathf.Min(height, Mathf.RoundToInt(110 * scaleFactor));
+
+            AdSize size = new AdSize(width, height);
+
+            // ===== ORIGINAL POSITION CODE (unchanged) =====
             int targetX = Mathf.RoundToInt(Screen.width * customXPercent);
             int targetY = Mathf.RoundToInt(Screen.height * customYPercent);
 
-            // Offset alignment relative to bottom-left origins
             int x = targetX - (width / 2);
             int y = targetY - (height / 2);
 
-            // Hard clamp everything within the safe display viewport bounds
-            x = Mathf.Clamp(x, 10, Screen.width - width - 10);
-            y = Mathf.Clamp(y, 10, Screen.height - height - 10);
+            x = Mathf.Clamp(x, 10, Mathf.Max(10, Screen.width - width - 10));
+            y = Mathf.Clamp(y, 10, Mathf.Max(10, Screen.height - height - 10));
+            // ==============================================
 
-            Debug.Log($"[NativeAdHandler] Fixed MREC Dimensions -> x={x}, y={y}, w={width}, h={height}");
+            Debug.Log($"[NativeAdHandler] {(useMedium ? "Medium" : "Small")} custom -> x={x}, y={y}, w={width}, h={height}");
             ad.RenderTemplate(style, size, x, y);
         }
         else
         {
-            // Safe Area / Intercept: Overwrite unsafe proportions passed from binding scripts
-            float safeWidthPercent = Mathf.Max(widthPercent, 0.65f);  // Clamp minimum horizontal space
-            float safeHeightPercent = Mathf.Max(heightPercent, 0.30f); // Clamp minimum vertical space
+            NativeTemplateStyle style = new NativeTemplateStyle
+            {
+                TemplateId = NativeTemplateId.Medium,
+                MainBackgroundColor = Color.white
+            };
 
-            width = Mathf.RoundToInt(Screen.width * safeWidthPercent);
-            height = Mathf.RoundToInt(Screen.height * safeHeightPercent);
+            float safeWidthPercent = Mathf.Max(widthPercent, 0.65f);
+            float safeHeightPercent = Mathf.Max(heightPercent, 0.30f);
+
+            int width = Mathf.RoundToInt(Screen.width * safeWidthPercent);
+            int height = Mathf.RoundToInt(Screen.height * safeHeightPercent);
 
             int minWidthPixels = Mathf.RoundToInt(320 * scaleFactor);
-            int minHeightPixels = Mathf.RoundToInt(260 * scaleFactor);
-
+            int minHeightPixels = Mathf.RoundToInt(300 * scaleFactor);
             if (width < minWidthPixels) width = minWidthPixels;
             if (height < minHeightPixels) height = minHeightPixels;
 
-            size = new AdSize(width, height);
-            ad.RenderTemplate(style, size, Position);
+            ad.RenderTemplate(style, new AdSize(width, height), Position);
         }
     }
 
@@ -252,7 +227,6 @@ public class NativeAdHandler : MonoBehaviour
         _currentAd?.Hide();
     }
 
-    /// <summary>Destroys only the currently-shown ad. The background pending/preloaded ad is left untouched.</summary>
     private void DestroyCurrentAd()
     {
         if (_currentAd != null)
@@ -263,21 +237,11 @@ public class NativeAdHandler : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Public entry point used by NativeAdScreenBinding's OnDisable.
-    /// Hides and destroys the shown ad, but deliberately does NOT touch the pending
-    /// preload, so it stays ready for whichever screen appears next.
-    /// </summary>
     public void DestroyAd()
     {
         DestroyCurrentAd();
     }
 
-    /// <summary>
-    /// Destroys everything, including the background preload.
-    /// Use this when native ads are being fully blocked (e.g., AdsManager.BlockNativeAd turned on), 
-    /// not for normal per-screen transitions.
-    /// </summary>
     public void DestroyAllAds()
     {
         DestroyCurrentAd();
@@ -291,5 +255,4 @@ public class NativeAdHandler : MonoBehaviour
     }
 
     private void OnDestroy() => DestroyAllAds();
-
 }
