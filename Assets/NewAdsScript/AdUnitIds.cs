@@ -4,24 +4,38 @@ public static class AdUnitIds
 {
 #if UNITY_ANDROID
 
-    // =========================
-    // PRODUCTION AD UNIT IDS
-    // =========================
+private const string ProdBanner = "ca-app-pub-5440548834626819/8854496427";
+private const string ProdBannerRight = "ca-app-pub-5440548834626819/8854496427";
 
-    private const string ProdBanner = "ca-app-pub-5440548834626819/1381497798"; // Top Left Banner
-    private const string ProdBannerRight = "ca-app-pub-5440548834626819/5119938963"; // Top Right Banner
+private const string ProdInterstitial = "ca-app-pub-5440548834626819/7541414758";
 
-    private const string ProdInterstitial = "ca-app-pub-5440548834626819/1428105960";
+private const string ProdRewarded = "ca-app-pub-5440548834626819/2738760197";
 
-    private const string ProdRewarded = "ca-app-pub-5440548834626819/1647597819";
+private const string ProdAppOpen = "ca-app-pub-5440548834626819/7381632656";
 
-    private const string ProdAppOpen = "ca-app-pub-5440548834626819/2698001786";
+private const string ProdMRec = "unused";
 
-    private const string ProdMRec = "unused"; // No MREC ID provided
+private const string ProdNative = "ca-app-pub-5440548834626819/6491312108";
 
-    private const string ProdNative = "ca-app-pub-5440548834626819/7801942628";
+private const string ProdRewardedInterstitial = "ca-app-pub-5440548834626819/9480262514";
 
-    private const string ProdRewardedInterstitial = "ca-app-pub-5440548834626819/9334516148";
+
+#elif UNITY_IOS
+
+private const string ProdBanner = "ca-app-pub-0000000000000000/6666666666";
+private const string ProdBannerRight = "ca-app-pub-0000000000000000/6666666667";
+
+private const string ProdInterstitial = "ca-app-pub-0000000000000000/7777777777";
+
+private const string ProdRewarded = "unused";
+
+private const string ProdAppOpen = "ca-app-pub-0000000000000000/9999999999";
+
+private const string ProdMRec = "unused";
+
+private const string ProdNative = "unused";
+
+private const string ProdRewardedInterstitial = "ca-app-pub-0000000000000000/1515151515";
 
 #elif UNITY_IOS
 

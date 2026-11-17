@@ -1,50 +1,43 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class FixedTouchField : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
+/// <summary>
+/// Look-area touch panel. Uses the EventSystem's per-pointer data only (no Input.touches),
+/// so it works the same on a real device, the Device Simulator and the mouse.
+/// Requires: a raycast-enabled UI Image on this object and an EventSystem in the scene.
+/// </summary>
+public class FixedTouchField : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
-    [HideInInspector]
-    public Vector2 TouchDist;
+    [HideInInspector] public Vector2 TouchDist;   // accumulated delta in pixels, cleared by the reader
+    [HideInInspector] public int PointerId = int.MinValue;
+    [HideInInspector] public bool Pressed;
 
-    [HideInInspector]
-    public bool Pressed;
-
-    private Vector2 pointerOld;
-    private int pointerId = -1;
-
-    void Update()
+    public void OnPointerDown(PointerEventData e)
     {
-        if (Pressed)
-        {
-            // Track the movement difference since the last frame
-            if (pointerId >= 0 && pointerId < Input.touches.Length)
-            {
-                TouchDist = Input.touches[pointerId].position - pointerOld;
-                pointerOld = Input.touches[pointerId].position;
-            }
-            else
-            {
-                // Fallback for testing inside the Unity Editor with a mouse
-                TouchDist = (Vector2)Input.mousePosition - pointerOld;
-                pointerOld = Input.mousePosition;
-            }
-        }
-        else
-        {
-            TouchDist = Vector2.zero;
-        }
-    }
-
-    public void OnPointerDown(PointerEventData eventData)
-    {
+        if (Pressed) return;                      // ignore a second finger on this field
         Pressed = true;
-        pointerId = eventData.pointerId;
-        pointerOld = eventData.position;
+        PointerId = e.pointerId;
+        TouchDist = Vector2.zero;
     }
 
-    public void OnPointerUp(PointerEventData eventData)
+    public void OnDrag(PointerEventData e)
+    {
+        if (!Pressed || e.pointerId != PointerId) return;
+        TouchDist += e.delta;                     // this finger's own movement only
+    }
+
+    public void OnPointerUp(PointerEventData e)
+    {
+        if (e.pointerId != PointerId) return;     // only our finger can release it
+        Pressed = false;
+        PointerId = int.MinValue;
+        TouchDist = Vector2.zero;
+    }
+
+    private void OnDisable()
     {
         Pressed = false;
-        pointerId = -1;
+        PointerId = int.MinValue;
+        TouchDist = Vector2.zero;
     }
 }

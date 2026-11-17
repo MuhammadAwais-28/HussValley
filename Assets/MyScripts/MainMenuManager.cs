@@ -10,7 +10,9 @@ public class MainMenuManager : MonoBehaviour
     public GameObject playerProfilePanel;
     public GameObject flagSelectionPanel;
     public GameObject characterSelectionPanel;
+    public GameObject levelSelectionPanel;
     public GameObject truckSelectionPanel;
+    public GameObject difficultySelectionPanel;
 
     [Header("Main Menu Buttons")]
     public Button playButton;
@@ -42,20 +44,29 @@ public class MainMenuManager : MonoBehaviour
 
     private int selectedCharacterIndex = -1;
 
+    [Header("Level Selection")]
+    public Button[] levelButtons;
+
+    private int selectedLevelIndex = -1;
+
     [Header("Truck Selection")]
     public Button[] truckSelectButtons;
 
     private int selectedTruckIndex = -1;
 
     [Header("Scene Settings")]
-    public string gameSceneName = "GameScene";
+    public string gameSceneName = "GamePlayScene";
+
+
+    [Header("Difficulty Selection")]
+    public Button[] difficultyButtons;
+
+    private int selectedDifficultyIndex = -1;
 
     private void Start()
     {
-        // Show first panel
         ShowPanel(playScreenPanel);
 
-        // Main Menu Buttons
         if (playButton != null)
             playButton.onClick.AddListener(OnPlayPressed);
 
@@ -65,21 +76,18 @@ public class MainMenuManager : MonoBehaviour
         if (privacyPolicyButton != null)
             privacyPolicyButton.onClick.AddListener(OnPrivacyPolicyPressed);
 
-        // Profile Buttons
         if (playerProfileSaveButton != null)
             playerProfileSaveButton.onClick.AddListener(OnPlayerProfileSavePressed);
 
         if (playerProfileBackButton != null)
             playerProfileBackButton.onClick.AddListener(OnPlayerProfileBackPressed);
 
-        // Flag Buttons
         if (flagSaveButton != null)
             flagSaveButton.onClick.AddListener(OnFlagSavePressed);
 
         if (flagBackButton != null)
             flagBackButton.onClick.AddListener(OnFlagBackPressed);
 
-        // Flag Selection Listeners
         if (flagButtons != null)
         {
             for (int i = 0; i < flagButtons.Length; i++)
@@ -89,7 +97,6 @@ public class MainMenuManager : MonoBehaviour
             }
         }
 
-        // Character Selection Listeners
         if (characterSelectButtons != null)
         {
             for (int i = 0; i < characterSelectButtons.Length; i++)
@@ -99,7 +106,15 @@ public class MainMenuManager : MonoBehaviour
             }
         }
 
-        // Truck Selection Listeners
+        if (levelButtons != null)
+        {
+            for (int i = 0; i < levelButtons.Length; i++)
+            {
+                int index = i;
+                levelButtons[i].onClick.AddListener(() => OnLevelSelected(index));
+            }
+        }
+
         if (truckSelectButtons != null)
         {
             for (int i = 0; i < truckSelectButtons.Length; i++)
@@ -109,7 +124,6 @@ public class MainMenuManager : MonoBehaviour
             }
         }
 
-        // Hide all flag highlights initially
         if (highlightBorders != null)
         {
             foreach (GameObject border in highlightBorders)
@@ -118,11 +132,21 @@ public class MainMenuManager : MonoBehaviour
                     border.SetActive(false);
             }
         }
+
+        if (difficultyButtons != null)
+        {
+            for (int i = 0; i < difficultyButtons.Length; i++)
+            {
+                int index = i;
+                difficultyButtons[i].onClick.AddListener(() => OnDifficultySelected(index));
+            }
+        }
+
     }
 
-    // ======================================================
+    // =========================
     // PLAY SCREEN
-    // ======================================================
+    // =========================
 
     public void OnPlayPressed()
     {
@@ -136,15 +160,12 @@ public class MainMenuManager : MonoBehaviour
 
     public void OnPrivacyPolicyPressed()
     {
-        if (!string.IsNullOrEmpty(privacyPolicyUrl))
-        {
-            Application.OpenURL(privacyPolicyUrl);
-        }
+        Application.OpenURL(privacyPolicyUrl);
     }
 
-    // ======================================================
-    // PLAYER PROFILE SCREEN
-    // ======================================================
+    // =========================
+    // PLAYER PROFILE
+    // =========================
 
     public void OnPlayerProfileSavePressed()
     {
@@ -152,7 +173,7 @@ public class MainMenuManager : MonoBehaviour
 
         if (string.IsNullOrEmpty(playerName))
         {
-            Debug.Log("Please enter your name.");
+            Debug.Log("Enter Player Name");
             return;
         }
 
@@ -167,9 +188,9 @@ public class MainMenuManager : MonoBehaviour
         ShowPanel(playScreenPanel);
     }
 
-    // ======================================================
-    // FLAG SELECTION SCREEN
-    // ======================================================
+    // =========================
+    // FLAG SELECTION
+    // =========================
 
     private void OnFlagClicked(int index)
     {
@@ -182,21 +203,17 @@ public class MainMenuManager : MonoBehaviour
             }
 
             if (index < highlightBorders.Length)
-            {
                 highlightBorders[index].SetActive(true);
-            }
         }
 
         selectedFlagIndex = index;
-
-        Debug.Log("Selected Flag Index: " + index);
     }
 
     public void OnFlagSavePressed()
     {
         if (selectedFlagIndex < 0)
         {
-            Debug.Log("Please select a flag before continuing.");
+            Debug.Log("Select Flag First");
             return;
         }
 
@@ -211,9 +228,9 @@ public class MainMenuManager : MonoBehaviour
         ShowPanel(playerProfilePanel);
     }
 
-    // ======================================================
-    // CHARACTER SELECTION SCREEN
-    // ======================================================
+    // =========================
+    // CHARACTER SELECTION
+    // =========================
 
     private void OnCharacterSelected(int index)
     {
@@ -222,20 +239,40 @@ public class MainMenuManager : MonoBehaviour
         PlayerPrefs.SetInt("SelectedCharacter", index);
         PlayerPrefs.Save();
 
-        Debug.Log("Selected Character: " + index);
+        Debug.Log("Selected Character : " + index);
 
-        ShowPanel(truckSelectionPanel);
+        ShowPanel(levelSelectionPanel);
     }
 
-    // Optional: Use this directly from Inspector buttons
     public void SelectCharacter(int index)
     {
         OnCharacterSelected(index);
     }
 
-    // ======================================================
-    // TRUCK SELECTION SCREEN
-    // ======================================================
+    // =========================
+    // LEVEL SELECTION
+    // =========================
+
+    private void OnLevelSelected(int index)
+    {
+        selectedLevelIndex = index;
+
+        PlayerPrefs.SetInt("SelectedLevel", index);
+        PlayerPrefs.Save();
+
+        Debug.Log("Selected Level : " + index);
+
+        ShowPanel(difficultySelectionPanel);
+    }
+
+    public void SelectLevel(int index)
+    {
+        OnLevelSelected(index);
+    }
+
+    // =========================
+    // TRUCK SELECTION
+    // =========================
 
     private void OnTruckSelected(int index)
     {
@@ -244,20 +281,45 @@ public class MainMenuManager : MonoBehaviour
         PlayerPrefs.SetInt("SelectedTruck", index);
         PlayerPrefs.Save();
 
-        Debug.Log("Selected Truck: " + index);
+        Debug.Log("Selected Truck : " + index);
 
         SceneManager.LoadScene(gameSceneName);
     }
 
-    // Optional: Use this directly from Inspector buttons
     public void SelectTruck(int index)
     {
         OnTruckSelected(index);
     }
 
-    // ======================================================
+
+
+    // =========================
+    // DIFFICULTY SELECTION
+    // =========================
+
+    private void OnDifficultySelected(int index)
+    {
+        selectedDifficultyIndex = index;
+        GameSession.SelectedMode = (GameMode)index;
+        PlayerPrefs.SetInt("SelectedDifficulty", index);
+        PlayerPrefs.Save();
+
+        Debug.Log("Selected Difficulty : " + index);
+
+        SceneManager.LoadScene("GamePlayScene");
+    }
+
+    public void SelectDifficulty(int index)
+    {
+        OnDifficultySelected(index);
+    }
+
+    // =========================
     // PANEL MANAGEMENT
-    // ======================================================
+    // =========================
+
+
+
 
     private void ShowPanel(GameObject panelToActivate)
     {
@@ -273,13 +335,15 @@ public class MainMenuManager : MonoBehaviour
         if (characterSelectionPanel != null)
             characterSelectionPanel.SetActive(false);
 
-        if (truckSelectionPanel != null)
-            truckSelectionPanel.SetActive(false);
+        if (levelSelectionPanel != null)
+            levelSelectionPanel.SetActive(false);
+
+        if (difficultySelectionPanel != null)
+            difficultySelectionPanel.SetActive(false);
 
         if (panelToActivate != null)
             panelToActivate.SetActive(true);
     }
-
 
     public void GoToHomeScene()
     {

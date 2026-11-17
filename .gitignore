@@ -1,0 +1,110 @@
+
+# ==========================================
+# UNITY GENERATED FILES
+# ==========================================
+
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+
+# Build output
+[Bb]uild/
+[Bb]uilds/
+[Aa]rtifacts/
+
+# ==========================================
+# UNITY CACHE AND GENERATED DATA
+# ==========================================
+
+.vs/
+.gradle/
+.consulo/
+sysinfo.txt
+
+# Asset Store tools
+[Aa]sset[Ss]tore[Tt]ools*
+
+# ==========================================
+# IDE FILES
+# ==========================================
+
+.idea/
+.vscode/
+.vs/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svclog
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Rider
+*.sln.iml
+
+# ==========================================
+# OPERATING SYSTEM FILES
+# ==========================================
+
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ==========================================
+# TEMPORARY AND BACKUP FILES
+# ==========================================
+
+*.tmp
+*.temp
+*.bak
+*.old
+*.orig
+*.swp
+*.swo
+*~
+
+# ==========================================
+# LOGS
+# ==========================================
+
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# ==========================================
+# GENERATED BUILD FILES
+# ==========================================
+
+*.apk
+*.aab
+*.app
+*.exe
+*.dll
+*.so
+*.dylib
+*.class
+
+# ==========================================
+# UNITY PACKAGE MANAGER
+# ==========================================
+
+# Keep Packages/manifest.json and packages-lock.json
+# Do not ignore the Packages folder.
+
+# ==========================================
+# BACKUP PROJECT FOLDERS
+# ==========================================
+
+# Your local backup folders
+*_BackUpThisFolder_*
+*_Backup*
