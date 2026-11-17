@@ -150,11 +150,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19d776f8361f5464087e1758a7995488, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChaserAI
-  baseSpeed: 3
+  baseSpeed: 1.5
   acceleration: 12
   repathInterval: 0.2
   normalMultiplier: 0.5
   mediumMultiplier: 0.8
   hardMultiplier: 1
-  catchDistance: 0.5
+  catchDistance: 0.2
   animator: {fileID: 0}

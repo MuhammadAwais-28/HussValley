@@ -34,6 +34,8 @@ public class ChaserAI : MonoBehaviour
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
+        if (animator == null)
+            animator = GetComponentInChildren<Animator>();
     }
 
     public void Init(Transform player, float delay)
