@@ -7,12 +7,14 @@ public class ChaserSpawner : MonoBehaviour
     [Header("References")]
     [SerializeField] private GameObject chaserPrefab;
     [SerializeField] private Transform player;
-    [SerializeField] private Transform[] spawnPoints;
+    [SerializeField] private Transform startLine;      // empty object at the player's start line
+    [SerializeField] private Transform[] spawnPoints;  // only their average position is used
 
     [Header("Settings")]
     [SerializeField] private bool spawnOnStart = true;
-    [SerializeField] private float releaseDelay = 3f;     // seconds before chasers start hunting
-    [SerializeField] private float spawnSpreadRadius = 2f; // used if spawn points < chaser count
+    [SerializeField] private float releaseDelay = 1f;
+    [SerializeField] private float laneOvershoot = 3f; // how far past the start line each lane ends
+    [SerializeField] private float laneSpacing = 0.5f; // gap between neighbouring chasers
 
     private readonly List<ChaserAI> activeChasers = new List<ChaserAI>();
 
@@ -25,41 +27,45 @@ public class ChaserSpawner : MonoBehaviour
     {
         ClearChasers();
 
+        if (spawnPoints == null || spawnPoints.Length == 0 || startLine == null)
+        {
+            Debug.LogWarning("ChaserSpawner: assign Spawn Points and Start Line.");
+            return;
+        }
+
+        Vector3 center = Vector3.zero;
+        foreach (var sp in spawnPoints) center += sp.position;
+        center /= spawnPoints.Length;
+
+        Vector3 axis = startLine.position - center;
+        axis.y = 0f;
+        axis.Normalize();
+        Vector3 side = Vector3.Cross(Vector3.up, axis);
+
         int count = GameSession.ChaserCount;
 
         for (int i = 0; i < count; i++)
         {
-            Vector3 pos = GetSpawnPosition(i);
+            float offset = (i - (count - 1) * 0.5f) * laneSpacing;
+            Vector3 spawnPos = SnapToNavMesh(center + side * offset);
 
-            GameObject obj = Instantiate(chaserPrefab, pos, Quaternion.identity);
+            float along = Vector3.Dot(startLine.position - spawnPos, axis) + laneOvershoot;
+            Vector3 laneEnd = SnapToNavMesh(spawnPos + axis * along);
+
+            GameObject obj = Instantiate(chaserPrefab, spawnPos, Quaternion.LookRotation(axis));
             ChaserAI chaser = obj.GetComponent<ChaserAI>();
-            chaser.Init(player, releaseDelay);
+            chaser.Init(player, releaseDelay, laneEnd, side, offset);
             activeChasers.Add(chaser);
         }
     }
 
-    private Vector3 GetSpawnPosition(int index)
+    private Vector3 SnapToNavMesh(Vector3 pos)
     {
-        Vector3 basePos = transform.position;
-
-        if (spawnPoints != null && spawnPoints.Length > 0)
-        {
-            Transform sp = spawnPoints[index % spawnPoints.Length];
-            basePos = sp.position;
-
-            // If we reuse a spawn point, spread them out so they don't stack
-            if (index >= spawnPoints.Length)
-            {
-                Vector2 offset = Random.insideUnitCircle * spawnSpreadRadius;
-                basePos += new Vector3(offset.x, 0f, offset.y);
-            }
-        }
-
-        if (NavMesh.SamplePosition(basePos, out NavMeshHit hit, 5f, NavMesh.AllAreas))
+        if (NavMesh.SamplePosition(pos, out NavMeshHit hit, 5f, NavMesh.AllAreas))
             return hit.position;
 
-        Debug.LogWarning("ChaserSpawner: spawn point not near NavMesh, using raw position.");
-        return basePos;
+        Debug.LogWarning("ChaserSpawner: point not near NavMesh: " + pos);
+        return pos;
     }
 
     public void StopAllChasers()

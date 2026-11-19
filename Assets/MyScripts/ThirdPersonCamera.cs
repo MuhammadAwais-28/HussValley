@@ -48,12 +48,16 @@ public class ThirdPersonCamera : MonoBehaviour
         Vector3 pivot = target.position + pivotOffset;
         Vector3 backDir = rot * Vector3.back;
 
-        // Pull the camera closer if a wall is in the way
+        // Pull the camera closer only for real walls (ignore the player and the chasers)
         float dist = distance;
-        if (Physics.SphereCast(pivot, collisionRadius, backDir, out RaycastHit hit,
-                               distance, collisionMask, QueryTriggerInteraction.Ignore))
+        RaycastHit[] hits = Physics.SphereCastAll(pivot, collisionRadius, backDir, distance,
+                                                  collisionMask, QueryTriggerInteraction.Ignore);
+        foreach (RaycastHit h in hits)
         {
-            dist = Mathf.Max(0.2f, hit.distance);
+            if (h.collider.transform.IsChildOf(target)) continue;               // the player
+            if (h.collider.GetComponentInParent<ChaserAI>() != null) continue;  // the chasers
+            if (h.distance > 0f && h.distance < dist)
+                dist = Mathf.Max(0.4f, h.distance);
         }
 
         transform.position = pivot + backDir * dist;

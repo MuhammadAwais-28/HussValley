@@ -4252,12 +4252,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NativeAdScreenBinding
   handler: {fileID: 0}
-  position: 1
-  useCustomPosition: 0
-  customXPercent: 0
-  customYPercent: 0.5
-  widthPercent: 0.4
-  heightPercent: 0.15
+  template: 0
+  position: 6
+  useCustomPosition: 1
+  customXPercent: 0.17
+  customYPercent: 0.6
+  widthPercent: 0.3
+  heightPercent: 0.2
 --- !u!1 &822765872
 GameObject:
   m_ObjectHideFlags: 0
@@ -5332,12 +5333,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NativeAdScreenBinding
   handler: {fileID: 0}
-  position: 1
-  useCustomPosition: 0
-  customXPercent: 0
-  customYPercent: 0.5
-  widthPercent: 0.4
-  heightPercent: 0.15
+  template: 0
+  position: 6
+  useCustomPosition: 1
+  customXPercent: 0.17
+  customYPercent: 0.6
+  widthPercent: 0.3
+  heightPercent: 0.2
 --- !u!1 &960428276
 GameObject:
   m_ObjectHideFlags: 0
@@ -5349,6 +5351,7 @@ GameObject:
   - component: {fileID: 960428277}
   - component: {fileID: 960428279}
   - component: {fileID: 960428278}
+  - component: {fileID: 960428280}
   m_Layer: 5
   m_Name: DifficultyModePanel
   m_TagString: Untagged
@@ -5414,6 +5417,26 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 960428276}
   m_CullTransparentMesh: 1
+--- !u!114 &960428280
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 960428276}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02bb947eca4c7434a860b338d1d3728b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NativeAdScreenBinding
+  handler: {fileID: 0}
+  template: 0
+  position: 6
+  useCustomPosition: 1
+  customXPercent: 0.17
+  customYPercent: 0.6
+  widthPercent: 0.3
+  heightPercent: 0.2
 --- !u!1 &962438389
 GameObject:
   m_ObjectHideFlags: 0
@@ -5580,12 +5603,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NativeAdScreenBinding
   handler: {fileID: 0}
-  position: 1
-  useCustomPosition: 0
-  customXPercent: 0
-  customYPercent: 0.5
-  widthPercent: 0.4
-  heightPercent: 0.15
+  template: 0
+  position: 6
+  useCustomPosition: 1
+  customXPercent: 0.17
+  customYPercent: 0.6
+  widthPercent: 0.3
+  heightPercent: 0.2
 --- !u!1 &967317990
 GameObject:
   m_ObjectHideFlags: 0
@@ -9132,12 +9156,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NativeAdScreenBinding
   handler: {fileID: 0}
+  template: 0
   position: 6
   useCustomPosition: 1
-  customXPercent: 0
-  customYPercent: 0.4
-  widthPercent: 0.45
-  heightPercent: 0.7
+  customXPercent: 0.17
+  customYPercent: 0.6
+  widthPercent: 0.3
+  heightPercent: 0.2
 --- !u!1 &1667946464
 GameObject:
   m_ObjectHideFlags: 0
@@ -9609,12 +9634,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NativeAdScreenBinding
   handler: {fileID: 0}
-  position: 1
-  useCustomPosition: 0
-  customXPercent: 0
-  customYPercent: 0.5
-  widthPercent: 0.4
-  heightPercent: 0.15
+  template: 0
+  position: 6
+  useCustomPosition: 1
+  customXPercent: 0.17
+  customYPercent: 0.6
+  widthPercent: 0.3
+  heightPercent: 0.2
 --- !u!1 &1801931736
 GameObject:
   m_ObjectHideFlags: 0

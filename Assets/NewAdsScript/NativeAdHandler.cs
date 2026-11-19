@@ -9,6 +9,12 @@ using UnityEngine;
 /// </summary>
 public class NativeAdHandler : MonoBehaviour
 {
+
+    [Header("Template (set per screen by NativeAdScreenBinding)")]
+    public bool useSmallTemplate = true;
+
+
+
     [Header("Template")]
     public AdPosition Position = AdPosition.Top;
 
@@ -156,68 +162,51 @@ public class NativeAdHandler : MonoBehaviour
 
     private void RenderAd(NativeOverlayAd ad)
     {
-        // Same scale factor as the original script
         float scaleFactor = Screen.dpi / 160f;
         if (scaleFactor <= 0f || float.IsNaN(scaleFactor)) scaleFactor = 1.0f;
         if (scaleFactor > 3.0f) scaleFactor = 2.0f;
 
+        // Minimum sizes in dp. Raise minMediumH if the validator still complains.
+        const float minSmallW = 280f, minSmallH = 100f;
+        const float minMediumW = 320f, minMediumH = 380f;
+
+        bool small = useSmallTemplate;
+        int maxW = Screen.width - 20;
+        int maxH = Screen.height - 20;
+
+        // Medium can't fit on a short landscape screen, so fall back to Small
+        if (!small && maxH < Mathf.RoundToInt(minMediumH * scaleFactor))
+            small = true;
+
+        float minW = (small ? minSmallW : minMediumW) * scaleFactor;
+        float minH = (small ? minSmallH : minMediumH) * scaleFactor;
+
+        int width = Mathf.Min(maxW, Mathf.Max(Mathf.RoundToInt(Screen.width * widthPercent), Mathf.RoundToInt(minW)));
+        int height = Mathf.Min(maxH, Mathf.Max(Mathf.RoundToInt(Screen.height * heightPercent), Mathf.RoundToInt(minH)));
+
+        NativeTemplateStyle style = new NativeTemplateStyle
+        {
+            TemplateId = small ? NativeTemplateId.Small : NativeTemplateId.Medium,
+            MainBackgroundColor = Color.white
+        };
+
+        AdSize size = new AdSize(width, height);
+
         if (useCustomPosition)
         {
-            int width = Mathf.RoundToInt(customBaseWidth * scaleFactor);
-            int height = Mathf.RoundToInt(customBaseHeight * scaleFactor);
-            if (width < 300) width = 300;
-            if (height < 250) height = 250;
-
-            // Original clamp limits (position math unchanged)
-            int maxHeight = Screen.height - 20;
-            bool useMedium = maxHeight >= minHeightForMedium * scaleFactor;
-            if (height > maxHeight) height = maxHeight;
-
-            NativeTemplateStyle style = new NativeTemplateStyle
-            {
-                TemplateId = useMedium ? NativeTemplateId.Medium : NativeTemplateId.Small,
-                MainBackgroundColor = Color.white
-            };
-
-            if (!useMedium)
-                height = Mathf.Min(height, Mathf.RoundToInt(110 * scaleFactor));
-
-            AdSize size = new AdSize(width, height);
-
-            // ===== ORIGINAL POSITION CODE (unchanged) =====
-            int targetX = Mathf.RoundToInt(Screen.width * customXPercent);
-            int targetY = Mathf.RoundToInt(Screen.height * customYPercent);
-
-            int x = targetX - (width / 2);
-            int y = targetY - (height / 2);
-
+            // customX/YPercent = where the CENTER of the ad sits
+            int x = Mathf.RoundToInt(Screen.width * customXPercent) - width / 2;
+            int y = Mathf.RoundToInt(Screen.height * customYPercent) - height / 2;
             x = Mathf.Clamp(x, 10, Mathf.Max(10, Screen.width - width - 10));
             y = Mathf.Clamp(y, 10, Mathf.Max(10, Screen.height - height - 10));
-            // ==============================================
 
-            Debug.Log($"[NativeAdHandler] {(useMedium ? "Medium" : "Small")} custom -> x={x}, y={y}, w={width}, h={height}");
+            Debug.Log($"[NativeAdHandler] {(small ? "Small" : "Medium")} custom -> x={x}, y={y}, w={width}, h={height}");
             ad.RenderTemplate(style, size, x, y);
         }
         else
         {
-            NativeTemplateStyle style = new NativeTemplateStyle
-            {
-                TemplateId = NativeTemplateId.Medium,
-                MainBackgroundColor = Color.white
-            };
-
-            float safeWidthPercent = Mathf.Max(widthPercent, 0.65f);
-            float safeHeightPercent = Mathf.Max(heightPercent, 0.30f);
-
-            int width = Mathf.RoundToInt(Screen.width * safeWidthPercent);
-            int height = Mathf.RoundToInt(Screen.height * safeHeightPercent);
-
-            int minWidthPixels = Mathf.RoundToInt(320 * scaleFactor);
-            int minHeightPixels = Mathf.RoundToInt(300 * scaleFactor);
-            if (width < minWidthPixels) width = minWidthPixels;
-            if (height < minHeightPixels) height = minHeightPixels;
-
-            ad.RenderTemplate(style, new AdSize(width, height), Position);
+            Debug.Log($"[NativeAdHandler] {(small ? "Small" : "Medium")} preset {Position} -> w={width}, h={height}");
+            ad.RenderTemplate(style, size, Position);
         }
     }
 
