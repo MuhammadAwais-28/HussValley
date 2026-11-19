@@ -31,10 +31,16 @@ public class RemoteAdsConfig : MonoBehaviour
 
     private string _reviewBuildVersion = "";
 
+    // True once a fetch + activate has actually succeeded.
     private bool _pipelineCompleted;
+
+    // True once Firebase dependencies are available and defaults are set,
+    // meaning FirebaseRemoteConfig.DefaultInstance is safe to read.
+    private bool _firebaseConfigUsable;
 
     private void Awake()
     {
+        // Reset statics so Enter Play Mode without domain reload behaves.
         if (Instance == null)
         {
             Instance = this;
@@ -48,6 +54,9 @@ public class RemoteAdsConfig : MonoBehaviour
 
     private void Start()
     {
+        if (Instance != this)
+            return;
+
         StartCoroutine(RunPipeline());
 
         Invoke(nameof(ForceReadyIfStillWaiting), readyTimeoutSeconds);
@@ -55,17 +64,19 @@ public class RemoteAdsConfig : MonoBehaviour
 
     private void ForceReadyIfStillWaiting()
     {
-        if (!IsReady)
-        {
-            Debug.LogWarning(
-                "[RemoteAdsConfig] Firebase timeout. " +
-                "Continuing with safe defaults (ALL ADS OFF)."
-            );
+        if (IsReady)
+            return;
 
-            ApplyToAdsManager();
+        Debug.LogWarning(
+            "[RemoteAdsConfig] Firebase timeout. " +
+            "Continuing with safe defaults (ALL ADS OFF)."
+        );
 
-            IsReady = true;
-        }
+        // Deliberately does NOT set _pipelineCompleted, so a late successful
+        // fetch can still apply real values afterwards.
+        ApplyToAdsManager();
+
+        IsReady = true;
     }
 
     private IEnumerator WaitForTask(
@@ -113,7 +124,9 @@ public class RemoteAdsConfig : MonoBehaviour
     {
         Debug.Log("[RemoteAdsConfig] Checking Firebase dependencies...");
 
-        Task<Firebase.DependencyStatus> depsTask = Firebase.FirebaseApp.CheckAndFixDependenciesAsync();
+        // FIX: must be Task<DependencyStatus> so that .Result is available.
+        Task<Firebase.DependencyStatus> depsTask =
+            Firebase.FirebaseApp.CheckAndFixDependenciesAsync();
 
         yield return WaitForTask(
             depsTask,
@@ -153,8 +166,6 @@ public class RemoteAdsConfig : MonoBehaviour
                 { "BlockAppOpenAd", true },
                 { "BlockNativeAd", true },
                 { "BlockRewardedInterstitialAd", true },
-
-
                 { "ReviewBuildVersion", "" }
             };
 
@@ -174,6 +185,10 @@ public class RemoteAdsConfig : MonoBehaviour
             FinishWithSafeDefaults();
             yield break;
         }
+
+        // From here on it is safe to read DefaultInstance values
+        // (defaults, or previously activated values).
+        _firebaseConfigUsable = true;
 
         yield return StartCoroutine(FetchAndActivateCoroutine());
     }
@@ -222,10 +237,14 @@ public class RemoteAdsConfig : MonoBehaviour
 
         Debug.Log("[RemoteAdsConfig] Remote Config successfully activated.");
 
+        // Mark complete BEFORE applying so no fallback path can overwrite
+        // these real values afterwards.
+        _pipelineCompleted = true;
+
         ApplyToAdsManager();
 
         IsReady = true;
-        _pipelineCompleted = true;
+        CancelInvoke(nameof(ForceReadyIfStillWaiting));
     }
 
     private IEnumerator RetryFetchOrGiveUp()
@@ -263,40 +282,64 @@ public class RemoteAdsConfig : MonoBehaviour
 
         IsReady = true;
         _pipelineCompleted = true;
+        CancelInvoke(nameof(ForceReadyIfStillWaiting));
     }
 
     private void ApplyToAdsManager()
     {
-        FirebaseRemoteConfig config =
-            FirebaseRemoteConfig.DefaultInstance;
+        // Only read from Firebase when it is known to be usable.
+        // Otherwise the private _block... fields keep their safe defaults (all true).
+        if (_firebaseConfigUsable)
+        {
+            try
+            {
+                FirebaseRemoteConfig config =
+                    FirebaseRemoteConfig.DefaultInstance;
 
-        // Read Remote Config values.
-        _blockAllAds =
-            config.GetValue("BlockAllAds").BooleanValue;
+                _blockAllAds =
+                    config.GetValue("BlockAllAds").BooleanValue;
 
-        _blockBannerAd =
-            config.GetValue("BlockBannerAd").BooleanValue;
+                _blockBannerAd =
+                    config.GetValue("BlockBannerAd").BooleanValue;
 
-        _blockInterstitialAd =
-            config.GetValue("BlockInterstitialAd").BooleanValue;
+                _blockInterstitialAd =
+                    config.GetValue("BlockInterstitialAd").BooleanValue;
 
-        _blockRewardedAd =
-            config.GetValue("BlockRewardedAd").BooleanValue;
+                _blockRewardedAd =
+                    config.GetValue("BlockRewardedAd").BooleanValue;
 
-        _blockAppOpenAd =
-            config.GetValue("BlockAppOpenAd").BooleanValue;
+                _blockAppOpenAd =
+                    config.GetValue("BlockAppOpenAd").BooleanValue;
 
-        _blockNativeAd =
-            config.GetValue("BlockNativeAd").BooleanValue;
+                _blockNativeAd =
+                    config.GetValue("BlockNativeAd").BooleanValue;
 
-        _blockMRecAd =
-            config.GetValue("BlockMRecAd").BooleanValue;
+                _blockMRecAd =
+                    config.GetValue("BlockMRecAd").BooleanValue;
 
-        _blockRewardedInterstitialAd =
-            config.GetValue("BlockRewardedInterstitialAd").BooleanValue;
+                _blockRewardedInterstitialAd =
+                    config.GetValue("BlockRewardedInterstitialAd").BooleanValue;
 
-        _reviewBuildVersion =
-    config.GetValue("ReviewBuildVersion").StringValue.Trim();
+                string reviewValue =
+                    config.GetValue("ReviewBuildVersion").StringValue;
+
+                _reviewBuildVersion =
+                    string.IsNullOrEmpty(reviewValue) ? "" : reviewValue.Trim();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(
+                    "[RemoteAdsConfig] Failed reading Remote Config values. " +
+                    "Using safe defaults (ALL ADS OFF). " + e
+                );
+
+                SetAllBlocked();
+            }
+        }
+        else
+        {
+            SetAllBlocked();
+        }
 
         string currentVersion = Application.version.Trim();
 
@@ -315,14 +358,7 @@ public class RemoteAdsConfig : MonoBehaviour
                 currentVersion + ". ALL ADS DISABLED."
             );
 
-            _blockAllAds = true;
-            _blockBannerAd = true;
-            _blockInterstitialAd = true;
-            _blockRewardedAd = true;
-            _blockAppOpenAd = true;
-            _blockNativeAd = true;
-            _blockMRecAd = true;
-            _blockRewardedInterstitialAd = true;
+            SetAllBlocked();
         }
 
         // Push updated values into AdsManager.
@@ -347,8 +383,21 @@ public class RemoteAdsConfig : MonoBehaviour
             " | Rewarded=" + _blockRewardedAd +
             " | AppOpen=" + _blockAppOpenAd +
             " | Native=" + _blockNativeAd +
-            " | MRec=" + _blockMRecAd
+            " | MRec=" + _blockMRecAd +
+            " | RewardedInterstitial=" + _blockRewardedInterstitialAd
         );
+    }
+
+    private void SetAllBlocked()
+    {
+        _blockAllAds = true;
+        _blockBannerAd = true;
+        _blockInterstitialAd = true;
+        _blockRewardedAd = true;
+        _blockAppOpenAd = true;
+        _blockNativeAd = true;
+        _blockMRecAd = true;
+        _blockRewardedInterstitialAd = true;
     }
 
     public void PushValuesInto(AdsManager ads)

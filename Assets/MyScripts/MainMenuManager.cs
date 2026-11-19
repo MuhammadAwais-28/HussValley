@@ -65,7 +65,15 @@ public class MainMenuManager : MonoBehaviour
 
     private void Start()
     {
-        ShowPanel(playScreenPanel);
+        if (PlayerPrefs.GetInt("OpenDifficultyPanel", 0) == 1)
+        {
+            PlayerPrefs.DeleteKey("OpenDifficultyPanel");
+            ShowPanel(difficultySelectionPanel);
+        }
+        else
+        {
+            ShowPanel(playScreenPanel);
+        }
 
         if (playButton != null)
             playButton.onClick.AddListener(OnPlayPressed);

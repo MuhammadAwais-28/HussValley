@@ -40,7 +40,7 @@ public class RoundManager : MonoBehaviour
             caughtRestartButton.onClick.AddListener(OnRestartWithAd);
 
         if (finishNextRoundButton != null)
-            finishNextRoundButton.onClick.AddListener(OnRestartWithAd);
+            finishNextRoundButton.onClick.AddListener(GoToDifficultySelection);
 
         if (caughtHomeButton != null)
             caughtHomeButton.onClick.AddListener(GoHome);
@@ -146,6 +146,22 @@ public class RoundManager : MonoBehaviour
 
     public void GoHome()
     {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(homeSceneName);
+    }
+
+    public void GoToDifficultyPanel()
+    {
+        PlayerPrefs.SetInt("OpenDifficultyPanel", 1);
+
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(homeSceneName);
+    }
+
+    public void GoToDifficultySelection()
+    {
+        PlayerPrefs.SetInt("OpenDifficultyPanel", 1);
+
         Time.timeScale = 1f;
         SceneManager.LoadScene(homeSceneName);
     }
